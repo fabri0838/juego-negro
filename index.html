@@ -1,1 +1,951 @@
-# juego-negro
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0e1526">
+<title>NEGRO · Anotador</title>
+<style>
+:root{
+  --noche:#0e1526;
+  --panel:#16203a;
+  --panel-2:#1c2947;
+  --linea:rgba(232,221,196,.10);
+  --marfil:#ece1c6;
+  --marfil-dim:rgba(236,225,198,.55);
+  --cobre:#d98c2f;
+  --cobre-vivo:#f2a93b;
+  --copa:#cd4452;
+  --espada:#6f8fc4;
+  --verde:#5fae6e;
+  --radius:14px;
+  --disp:"Avenir Next Condensed","Arial Narrow",ui-sans-serif,sans-serif-condensed,sans-serif;
+  --body:-apple-system,"Helvetica Neue",system-ui,Roboto,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:var(--body);
+  background:var(--noche);
+  color:var(--marfil);
+  background-image:
+    repeating-linear-gradient(45deg, rgba(236,225,198,.030) 0 1px, transparent 1px 16px),
+    repeating-linear-gradient(-45deg, rgba(236,225,198,.030) 0 1px, transparent 1px 16px);
+  min-height:100dvh;
+  user-select:none;-webkit-user-select:none;
+  overscroll-behavior:none;
+}
+#app{max-width:520px;margin:0 auto;min-height:100dvh;display:flex;flex-direction:column;
+  padding:max(10px,env(safe-area-inset-top)) 14px calc(18px + env(safe-area-inset-bottom));}
+
+/* ---------- header ---------- */
+header{display:flex;align-items:center;justify-content:space-between;padding:8px 2px 14px}
+.logo{display:flex;align-items:baseline;gap:8px}
+.logo h1{font-family:var(--disp);font-weight:800;font-size:30px;letter-spacing:.14em;line-height:1}
+.logo h1 .o{color:var(--cobre-vivo)}
+.palos{display:flex;gap:5px;align-items:center;transform:translateY(-2px)}
+.palos svg{width:13px;height:13px;opacity:.85}
+.h-right{display:flex;align-items:center;gap:10px}
+.ronda-chip{font-family:var(--disp);font-weight:700;letter-spacing:.08em;font-size:13px;
+  border:1px solid var(--linea);border-radius:999px;padding:5px 11px;color:var(--marfil-dim)}
+.ronda-chip b{color:var(--cobre-vivo);font-weight:800}
+.icon-btn{width:38px;height:38px;border-radius:11px;border:1px solid var(--linea);
+  background:var(--panel);color:var(--marfil);font-size:18px;display:flex;align-items:center;
+  justify-content:center;cursor:pointer}
+.icon-btn:active{transform:scale(.94)}
+
+/* ---------- comunes ---------- */
+.eyebrow{font-family:var(--disp);font-weight:700;letter-spacing:.22em;font-size:12px;
+  color:var(--cobre);text-transform:uppercase;margin-bottom:6px}
+.titulo{font-family:var(--disp);font-weight:800;font-size:34px;letter-spacing:.02em;line-height:1.05;text-transform:uppercase}
+.sub{color:var(--marfil-dim);font-size:14px;margin-top:6px;line-height:1.45}
+.card{background:var(--panel);border:1px solid var(--linea);border-radius:var(--radius);padding:16px}
+.btn{display:block;width:100%;border:none;border-radius:13px;padding:16px;cursor:pointer;
+  font-family:var(--disp);font-weight:800;font-size:18px;letter-spacing:.10em;text-transform:uppercase;
+  background:var(--cobre);color:#1b1206;box-shadow:0 4px 0 #8f5a1a;}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 #8f5a1a}
+.btn[disabled]{opacity:.35;box-shadow:none;transform:none}
+.btn.fantasma{background:transparent;color:var(--marfil);border:1px solid var(--linea);box-shadow:none}
+.btn.fantasma:active{transform:scale(.98)}
+input[type=text]{width:100%;background:var(--panel-2);border:1px solid var(--linea);border-radius:11px;
+  color:var(--marfil);font-size:17px;padding:13px 14px;font-family:var(--body)}
+input[type=text]:focus{outline:none;border-color:var(--cobre)}
+.fila{display:flex;gap:10px}
+.fila>*{flex:1}
+.sep{height:14px}
+.sep-l{height:22px}
+
+/* ---------- setup ---------- */
+.setup-hero{padding:18px 2px 6px}
+.naipe-deco{display:flex;gap:6px;margin:14px 0 4px}
+.naipe-deco span{width:34px;height:48px;border-radius:6px;border:1px solid var(--linea);
+  background:
+    repeating-linear-gradient(45deg, rgba(236,225,198,.10) 0 1px, transparent 1px 7px),
+    repeating-linear-gradient(-45deg, rgba(236,225,198,.10) 0 1px, transparent 1px 7px),
+    var(--panel-2);
+  transform:rotate(var(--r));box-shadow:0 3px 8px rgba(0,0,0,.35)}
+.opt-grupo{display:flex;gap:8px}
+.opt{flex:1;text-align:center;padding:12px 4px;border-radius:11px;border:1px solid var(--linea);
+  background:var(--panel-2);cursor:pointer;font-family:var(--disp);font-weight:700;font-size:15px;letter-spacing:.04em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.opt.on{border-color:var(--cobre);background:rgba(217,140,47,.14);color:var(--cobre-vivo)}
+label.campo{display:block;font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--marfil-dim);font-family:var(--disp);font-weight:700;margin:0 0 6px 2px}
+.switch-fila{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.switch{width:52px;height:30px;border-radius:99px;background:var(--panel-2);border:1px solid var(--linea);
+  position:relative;cursor:pointer;flex:none;transition:background .2s}
+.switch i{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;
+  background:var(--marfil-dim);transition:transform .2s,background .2s}
+.switch.on{background:rgba(217,140,47,.35);border-color:var(--cobre)}
+.switch.on i{transform:translateX(22px);background:var(--cobre-vivo)}
+.copa-preview{margin-top:12px;border-top:1px dashed var(--linea);padding-top:10px;font-size:13px;
+  color:var(--marfil-dim);line-height:1.7;font-family:var(--mono)}
+.copa-preview b{color:var(--cobre-vivo)}
+
+/* ---------- banner ronda especial ---------- */
+.tipo-banner{margin-bottom:12px;border-radius:11px;padding:10px 13px;font-size:13px;line-height:1.45;
+  border:1px dashed rgba(111,143,196,.5);background:rgba(111,143,196,.10);color:#bccfee}
+.tipo-banner b{font-family:var(--disp);letter-spacing:.1em;text-transform:uppercase;color:#dce7fa}
+
+/* ---------- declarar / pronóstico ---------- */
+.turno-card{text-align:center;padding:24px 16px}
+.turno-nombre{font-family:var(--disp);font-weight:800;font-size:42px;text-transform:uppercase;
+  letter-spacing:.03em;line-height:1;margin:4px 0 2px;color:var(--cobre-vivo)}
+.turno-rol{font-size:13px;color:var(--marfil-dim);letter-spacing:.1em;text-transform:uppercase;font-family:var(--disp);font-weight:700}
+.pad{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:18px}
+.pad.dos{grid-template-columns:repeat(2,1fr)}
+.pad button{aspect-ratio:1;border-radius:13px;border:1px solid var(--linea);background:var(--panel-2);
+  color:var(--marfil);font-family:var(--disp);font-weight:800;font-size:26px;cursor:pointer}
+.pad.dos button{aspect-ratio:auto;padding:20px 0}
+.pad button:active{background:var(--cobre);color:#1b1206;transform:scale(.93)}
+.pad-nombres{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-top:18px}
+.pad-nombres button{border-radius:13px;border:1px solid var(--linea);background:var(--panel-2);
+  color:var(--marfil);font-family:var(--disp);font-weight:800;font-size:19px;letter-spacing:.03em;
+  text-transform:uppercase;cursor:pointer;padding:20px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pad-nombres button:active{background:var(--cobre);color:#1b1206;transform:scale(.95)}
+.decl-resumen{display:flex;justify-content:space-between;font-size:13px;color:var(--marfil-dim);
+  margin-top:14px;font-family:var(--mono)}
+.decl-resumen b{color:var(--marfil)}
+.aviso{margin-top:10px;font-size:13px;border-radius:9px;padding:8px 10px;line-height:1.4;
+  background:rgba(111,143,196,.12);color:#aac2e8}
+.decl-lista{display:flex;flex-direction:column;gap:6px;margin-top:14px}
+.decl-item{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;
+  border-radius:10px;background:var(--panel-2);border:1px solid transparent;font-size:15px}
+.decl-item.activo{border-color:var(--cobre)}
+.decl-item .v{font-family:var(--disp);font-weight:800;font-size:17px;color:var(--cobre-vivo)}
+.decl-item .pend{color:var(--marfil-dim);font-size:13px}
+
+/* ---------- mesa ---------- */
+.mesa-info{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.mano-prog{font-family:var(--disp);font-weight:800;font-size:20px;letter-spacing:.04em;text-transform:uppercase}
+.mano-prog small{color:var(--marfil-dim);font-weight:700;font-size:13px;letter-spacing:.12em}
+.barra{height:5px;border-radius:99px;background:var(--panel-2);overflow:hidden;margin:8px 0 16px}
+.barra i{display:block;height:100%;background:linear-gradient(90deg,var(--cobre),var(--cobre-vivo));
+  border-radius:99px;transition:width .35s ease}
+.mesa{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.jcard{position:relative;border-radius:var(--radius);border:1px solid var(--linea);background:var(--panel);
+  padding:14px 12px 12px;cursor:pointer;overflow:hidden;transition:transform .08s}
+.jcard:active{transform:scale(.96)}
+.jcard.completo{border-color:rgba(95,174,110,.55)}
+.jcard.pasado{border-color:rgba(205,68,82,.55)}
+.jcard .nom{font-family:var(--disp);font-weight:800;font-size:19px;text-transform:uppercase;
+  letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:46px}
+.jcard .pts{position:absolute;top:12px;right:11px;font-family:var(--mono);font-size:12px;color:var(--marfil-dim)}
+.jcard .marcas{display:flex;align-items:baseline;gap:8px;margin-top:10px}
+.jcard .gan{font-family:var(--disp);font-weight:800;font-size:38px;line-height:1;color:var(--cobre-vivo)}
+.jcard .de{font-size:13px;color:var(--marfil-dim)}
+.jcard .estado{margin-top:6px;font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  font-family:var(--disp);font-weight:700;color:var(--marfil-dim)}
+.jcard.completo .estado{color:#9fd8ab}
+.jcard.pasado .estado{color:#eb8e99}
+.chip-rep,.chip-mano{position:absolute;bottom:10px;right:10px;font-size:10px;font-family:var(--disp);
+  font-weight:800;letter-spacing:.08em;border-radius:99px;padding:3px 8px}
+.chip-rep{background:rgba(111,143,196,.18);color:#aac2e8;border:1px solid rgba(111,143,196,.4)}
+.chip-mano{background:rgba(217,140,47,.18);color:var(--cobre-vivo);border:1px solid rgba(217,140,47,.45)}
+.mesa-acciones{display:flex;gap:10px;margin-top:14px}
+.mesa-acciones .btn{flex:1}
+.btn.mini{padding:13px;font-size:15px}
+
+/* ---------- resultado ronda ---------- */
+.res-fila{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid var(--linea)}
+.res-fila:last-child{border-bottom:none}
+.res-pos{font-family:var(--disp);font-weight:800;font-size:16px;width:22px;color:var(--marfil-dim)}
+.res-nom{flex:1;font-family:var(--disp);font-weight:700;font-size:18px;text-transform:uppercase;letter-spacing:.02em;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.res-detalle{font-size:12px;color:var(--marfil-dim);font-family:var(--mono);white-space:nowrap}
+.res-delta{font-family:var(--disp);font-weight:800;font-size:22px;min-width:50px;text-align:right}
+.res-delta.pos{color:var(--cobre-vivo)}
+.res-delta.neg{color:var(--copa)}
+.res-total{font-family:var(--mono);font-size:14px;min-width:42px;text-align:right;color:var(--marfil)}
+.mov{font-size:12px;width:16px;text-align:center}
+.mov.up{color:#9fd8ab}.mov.dn{color:#eb8e99}
+.pron-fila{display:flex;justify-content:space-between;align-items:center;padding:8px 2px;font-size:14px;
+  border-bottom:1px dashed var(--linea)}
+.pron-fila:last-child{border-bottom:none}
+.pron-fila .a{font-family:var(--disp);font-weight:800;font-size:14px;letter-spacing:.05em}
+.pron-fila .ok{color:#9fd8ab}.pron-fila .no{color:var(--marfil-dim)}
+
+/* ---------- final / podio ---------- */
+.podio{display:flex;align-items:flex-end;gap:8px;margin:22px 0 8px;height:190px}
+.pcol{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:8px;min-width:0}
+.pcol .pn{font-family:var(--disp);font-weight:800;text-transform:uppercase;font-size:16px;
+  text-align:center;line-height:1.1;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pcol .pp{font-family:var(--mono);font-size:13px;color:var(--marfil-dim)}
+.pcol .bloque{width:100%;border-radius:10px 10px 0 0;display:flex;align-items:flex-start;
+  justify-content:center;padding-top:8px;font-family:var(--disp);font-weight:800;font-size:22px;color:#1b1206}
+.pcol.p1 .bloque{height:110px;background:linear-gradient(180deg,var(--cobre-vivo),var(--cobre))}
+.pcol.p2 .bloque{height:78px;background:linear-gradient(180deg,#b9c2d4,#8d99b1);}
+.pcol.p3 .bloque{height:56px;background:linear-gradient(180deg,#a9744a,#84572f);color:#f5e9da}
+.corona{font-size:22px}
+.copa-badge{display:inline-block;font-family:var(--disp);font-weight:800;font-size:12px;letter-spacing:.1em;
+  border-radius:99px;padding:3px 9px;background:rgba(217,140,47,.16);color:var(--cobre-vivo);
+  border:1px solid rgba(217,140,47,.4);margin-left:6px}
+
+/* ---------- hojas ---------- */
+.hoja-fondo{position:fixed;inset:0;background:rgba(5,8,16,.7);z-index:40;display:none}
+.hoja-fondo.abierta{display:block}
+.hoja{position:fixed;left:0;right:0;bottom:0;z-index:41;background:var(--panel);
+  border-radius:20px 20px 0 0;border-top:1px solid var(--linea);max-height:78dvh;display:flex;
+  flex-direction:column;transform:translateY(105%);transition:transform .28s ease}
+.hoja.abierta{transform:translateY(0)}
+.hoja-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 10px}
+.hoja-head h3{font-family:var(--disp);font-weight:800;letter-spacing:.12em;text-transform:uppercase;font-size:17px}
+.hoja-body{overflow-y:auto;padding:4px 18px calc(20px + env(safe-area-inset-bottom))}
+.var-item{display:flex;gap:10px;padding:9px 0;border-bottom:1px dashed var(--linea);font-size:13px;line-height:1.45}
+.var-item .t{font-family:var(--mono);font-size:11px;color:var(--marfil-dim);min-width:46px;padding-top:2px}
+.menu-item{display:flex;align-items:center;gap:12px;width:100%;background:none;border:none;
+  border-bottom:1px solid var(--linea);color:var(--marfil);font-size:16px;padding:15px 2px;cursor:pointer;text-align:left}
+.menu-item:last-child{border-bottom:none}
+.menu-item .mi{width:26px;text-align:center;font-size:17px}
+.menu-item.peligro{color:var(--copa)}
+
+/* ---------- historial rondas ---------- */
+.h-ronda{margin-bottom:14px}
+.h-ronda h4{font-family:var(--disp);font-weight:800;font-size:14px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--cobre);margin-bottom:6px}
+.h-grid{display:grid;grid-template-columns:1fr auto auto auto;gap:4px 10px;font-size:13px;font-family:var(--mono)}
+.h-grid .hh{color:var(--marfil-dim);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+.h-grid .dneg{color:var(--copa)}
+.h-grid .dpos{color:var(--cobre-vivo)}
+
+/* ---------- stats / copa ---------- */
+.stat-fila{display:flex;justify-content:space-between;align-items:center;padding:11px 2px;
+  border-bottom:1px solid var(--linea);font-size:15px;gap:10px}
+.stat-fila:last-child{border-bottom:none}
+.stat-fila b{font-family:var(--disp);letter-spacing:.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stat-fila span{font-family:var(--mono);font-size:13px;color:var(--marfil-dim);white-space:nowrap}
+.copa-pts{font-family:var(--disp)!important;font-weight:800;font-size:20px!important;color:var(--cobre-vivo)!important}
+
+/* ---------- toast / confetti ---------- */
+.toast{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%);
+  background:var(--marfil);color:#161616;font-size:14px;font-weight:600;border-radius:99px;
+  padding:10px 18px;z-index:60;animation:tin .25s ease;white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+@keyframes tin{from{opacity:0;transform:translate(-50%,10px)}to{opacity:1;transform:translate(-50%,0)}}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:50}
+.fade-in{animation:fin .3s ease}
+@keyframes fin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<canvas id="confetti"></canvas>
+
+<div class="hoja-fondo" id="hojaFondo" onclick="cerrarHojas()"></div>
+<div class="hoja" id="hojaVar">
+  <div class="hoja-head"><h3>VAR · Historial</h3><button class="icon-btn" onclick="cerrarHojas()">✕</button></div>
+  <div class="hoja-body" id="varBody"></div>
+</div>
+<div class="hoja" id="hojaMenu">
+  <div class="hoja-head"><h3>Menú</h3><button class="icon-btn" onclick="cerrarHojas()">✕</button></div>
+  <div class="hoja-body" id="menuBody"></div>
+</div>
+<div class="hoja" id="hojaHist">
+  <div class="hoja-head"><h3>Rondas jugadas</h3><button class="icon-btn" onclick="cerrarHojas()">✕</button></div>
+  <div class="hoja-body" id="histBody"></div>
+</div>
+<div class="hoja" id="hojaStats">
+  <div class="hoja-head"><h3>Historial entre amigos</h3><button class="icon-btn" onclick="cerrarHojas()">✕</button></div>
+  <div class="hoja-body" id="statsBody"></div>
+</div>
+<div class="hoja" id="hojaCopa">
+  <div class="hoja-head"><h3 id="copaTitulo">La Copa</h3><button class="icon-btn" onclick="cerrarHojas()">✕</button></div>
+  <div class="hoja-body" id="copaBody"></div>
+</div>
+
+<script>
+"use strict";
+/* ================= utilidades ================= */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function store(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k));localStorage.setItem(k,JSON.stringify(v));}catch(e){return null;}}
+function storeDel(k){try{localStorage.removeItem(k);}catch(e){}}
+function vibrar(ms){try{if(navigator.vibrate)navigator.vibrate(ms);}catch(e){}}
+let toastT=null;
+function toast(msg){document.querySelectorAll(".toast").forEach(e=>e.remove());
+  const d=document.createElement("div");d.className="toast";d.textContent=msg;document.body.appendChild(d);
+  clearTimeout(toastT);toastT=setTimeout(()=>d.remove(),2200);}
+
+/* ---- sonido ---- */
+let sonidoOn=store("negro_sonido");if(sonidoOn===null)sonidoOn=true;
+let actx=null;
+function beep(f,dur,tipo,vol){
+  if(!sonidoOn)return;
+  try{
+    actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    const o=actx.createOscillator(),g=actx.createGain();
+    o.type=tipo||"triangle";o.frequency.value=f;
+    g.gain.setValueAtTime(vol||.12,actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,actx.currentTime+(dur||.12));
+    o.connect(g);g.connect(actx.destination);o.start();o.stop(actx.currentTime+(dur||.12));
+  }catch(e){}
+}
+const sClick=()=>beep(620,.06);
+const sOk=()=>{beep(523,.09);setTimeout(()=>beep(784,.14),90);};
+const sMal=()=>beep(180,.22,"sawtooth",.08);
+const sWin=()=>{[523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.18),i*130));};
+
+/* ---- pantalla encendida ---- */
+let wakeLock=null;
+async function pedirWake(){try{if("wakeLock" in navigator)wakeLock=await navigator.wakeLock.request("screen");}catch(e){}}
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&S)pedirWake();});
+
+/* ================= estructura de rondas ================= */
+const NJ=4;
+let S=null;
+const manoDe=rep=>(rep+1)%NJ;
+const ordenDesde=rep=>{const m=manoDe(rep),o=[];for(let i=0;i<NJ;i++)o.push((m+i)%NJ);return o;};
+
+function armarEstructura(formato,maxC){
+  const e=[];
+  if(formato==="iv"){
+    for(let c=2;c<=maxC;c++)e.push({cartas:c,tipo:"normal"});       // ida
+    for(let c=maxC-1;c>=2;c--)e.push({cartas:c,tipo:"normal"});     // vuelta
+    e.push({cartas:1,tipo:"ciega"});                                 // 1 carta sin ver
+    e.push({cartas:1,tipo:"frente"});                                // 1 carta en la frente
+  }else{
+    const n=formato==="10"?10:15;
+    for(let r=1;r<=n;r++)e.push({cartas:r+1,tipo:"normal"});
+  }
+  return e;
+}
+const rondaInfo=()=>S.estructura[S.ronda-1];
+const cartasAhora=()=>rondaInfo().cartas;
+const tipoBanner=t=>t==="ciega"
+  ?`<div class="tipo-banner fade-in">🂠 <b>Ronda a ciegas</b> — una sola carta y nadie ve la suya. Se declara a pura intuición.</div>`
+  :t==="frente"
+  ?`<div class="tipo-banner fade-in">👁 <b>Ronda en la frente</b> — cada uno se pone la carta en la frente: ves las de los demás, pero no la tuya.</div>`
+  :"";
+
+/* ================= estado ================= */
+function nuevoEstado(nombres,formato,maxC,copaOn){
+  const est=armarEstructura(formato,maxC);
+  return {fase:copaOn?"pronostico":"declarar",jugadores:nombres,estructura:est,rondas:est.length,
+    ronda:1,repartidor:0,copa:copaOn,
+    pron:[null,null,null,null],pronTurno:0,copaPron:[0,0,0,0],
+    decl:[null,null,null,null],declTurno:0,gan:[0,0,0,0],manos:0,pila:[],
+    puntos:[0,0,0,0],historial:[],varLog:[],movs:null,ts:Date.now()};
+}
+function guardar(){if(S)store("negro_partida",S);}
+function logVar(txt){if(!S)return;
+  const h=new Date(),t=String(h.getHours()).padStart(2,"0")+":"+String(h.getMinutes()).padStart(2,"0");
+  S.varLog.unshift({t:t,txt:txt});if(S.varLog.length>300)S.varLog.pop();}
+
+/* ================= setup ================= */
+let cfg={
+  nombres:store("negro_nombres")||["","","",""],
+  formato:store("negro_formato")||"iv",
+  maxC:store("negro_maxc")||8,
+  copaOn:store("negro_copa_on")===true,
+  copaNombre:store("negro_copa_nombre")||"Copa de los Pibes"
+};
+let repInicial=0;
+
+function vistaSetup(cont){
+  const copa=store("negro_copa");
+  const est=armarEstructura(cfg.formato,cfg.maxC);
+  $("app").innerHTML=`
+  ${headerHTML(false)}
+  <div class="setup-hero fade-in">
+    <div class="eyebrow">El juego de la mesa</div>
+    <div class="titulo">¿Quién pide<br>y quién paga?</div>
+    <p class="sub">Declarás cuántas manos ganás: si acertás sumás, si pifiás restás la diferencia.</p>
+    <div class="naipe-deco">
+      <span style="--r:-7deg"></span><span style="--r:-2deg"></span>
+      <span style="--r:3deg"></span><span style="--r:8deg"></span>
+    </div>
+  </div>
+  <div class="sep"></div>
+  ${cont?`<button class="btn" onclick="continuarPartida()">▶ &nbsp;Continuar partida (ronda ${cont.ronda}/${cont.rondas})</button>
+  <div class="sep"></div>`:""}
+  <div class="card">
+    <label class="campo">Jugadores · en orden de mesa</label>
+    ${[0,1,2,3].map(i=>`<input type="text" id="n${i}" maxlength="12" placeholder="Jugador ${i+1}"
+      value="${esc(cfg.nombres[i]||"")}" style="margin-bottom:8px" autocomplete="off">`).join("")}
+    <div class="sep"></div>
+    <label class="campo">Formato</label>
+    <div class="opt-grupo">
+      <div class="opt ${cfg.formato==="iv"?"on":""}" onclick="setFormato('iv')">Ida y vuelta</div>
+      <div class="opt ${cfg.formato==="10"?"on":""}" onclick="setFormato('10')">Ida · 10</div>
+      <div class="opt ${cfg.formato==="15"?"on":""}" onclick="setFormato('15')">Ida · 15</div>
+    </div>
+    ${cfg.formato==="iv"?`
+    <div class="sep"></div>
+    <label class="campo">Sube hasta</label>
+    <div class="opt-grupo">
+      ${[6,8,10].map(m=>`<div class="opt ${cfg.maxC===m?"on":""}" onclick="setMaxC(${m})">${m} cartas</div>`).join("")}
+    </div>
+    <p class="sub" style="font-size:12px">2 → ${cfg.maxC} → 2, después <b style="color:var(--marfil)">a ciegas</b> y <b style="color:var(--marfil)">en la frente</b> · ${est.length} rondas en total.</p>`:""}
+    <div class="sep"></div>
+    <label class="campo">Reparte primero</label>
+    <div class="opt-grupo" id="repGrupo">
+      ${[0,1,2,3].map(i=>`<div class="opt ${i===repInicial?"on":""}" data-rep="${i}" onclick="setRep(${i})">J${i+1}</div>`).join("")}
+    </div>
+  </div>
+  <div class="sep"></div>
+  <div class="card">
+    <div class="switch-fila">
+      <div>
+        <label class="campo" style="margin-bottom:2px">Jugar por la Copa 🏆</label>
+        <p class="sub" style="margin-top:2px;font-size:12px">Ganás la partida: <b style="color:var(--marfil)">+3</b> · salís segundo: <b style="color:var(--marfil)">+1</b> · acertás quién gana cada ronda: <b style="color:var(--marfil)">+1</b></p>
+      </div>
+      <div class="switch ${cfg.copaOn?"on":""}" onclick="toggleCopa()"><i></i></div>
+    </div>
+    ${cfg.copaOn?`
+    <div class="sep"></div>
+    <input type="text" id="copaNom" maxlength="24" placeholder="Nombre de la copa" value="${esc(cfg.copaNombre)}" autocomplete="off">
+    ${copa&&copa.nombre===cfg.copaNombre?`
+      <div class="copa-preview">Va por la fecha <b>${copa.partidas.length+1}</b> · puntero:
+        ${(function(){const l=Object.values(copa.pts).sort((a,b)=>b.p-a.p)[0];
+          return l?`<b>${esc(l.nombre)}</b> con <b>${l.p}</b> pts`:"—";})()}
+      </div>`:copa?`<div class="copa-preview">Ojo: ya existe la copa <b>${esc(copa.nombre)}</b>. Si cambiás el nombre arranca una copa nueva y la anterior se pisa.</div>`:""}`:""}
+  </div>
+  <div class="sep-l"></div>
+  <button class="btn" onclick="empezar()">Repartir y arrancar</button>
+  <div class="sep"></div>
+  <div class="fila">
+    <button class="btn fantasma mini" onclick="abrirStats()">Historial</button>
+    ${store("negro_copa")?`<button class="btn fantasma mini" onclick="abrirCopa()">🏆 La Copa</button>`:""}
+  </div>`;
+  [0,1,2,3].forEach(i=>$("n"+i).addEventListener("input",e=>{cfg.nombres[i]=e.target.value;
+    const o=document.querySelector(`[data-rep="${i}"]`);if(o)o.textContent=e.target.value.trim()||("J"+(i+1));}));
+  cfg.nombres.forEach((n,i)=>{const o=document.querySelector(`[data-rep="${i}"]`);if(o&&n.trim())o.textContent=n.trim();});
+  const cn=$("copaNom");if(cn)cn.addEventListener("input",e=>{cfg.copaNombre=e.target.value;});
+}
+function setFormato(f){cfg.formato=f;sClick();vibrar(10);render();}
+function setMaxC(m){cfg.maxC=m;sClick();vibrar(10);render();}
+function setRep(i){repInicial=i;sClick();vibrar(10);
+  document.querySelectorAll("#repGrupo .opt").forEach((o,j)=>o.classList.toggle("on",j===i));}
+function toggleCopa(){cfg.copaOn=!cfg.copaOn;sClick();vibrar(10);render();}
+
+function empezar(){
+  const nombres=[0,1,2,3].map(i=>($("n"+i).value||"").trim()||("Jugador "+(i+1)));
+  cfg.nombres=nombres;
+  store("negro_nombres",nombres);store("negro_formato",cfg.formato);
+  store("negro_maxc",cfg.maxC);store("negro_copa_on",cfg.copaOn);
+  if(cfg.copaOn){
+    cfg.copaNombre=(cfg.copaNombre||"").trim()||"Copa de los Pibes";
+    store("negro_copa_nombre",cfg.copaNombre);
+    let copa=store("negro_copa");
+    if(!copa||copa.nombre!==cfg.copaNombre)
+      copa={nombre:cfg.copaNombre,creada:new Date().toLocaleDateString("es-AR"),pts:{},partidas:[]};
+    nombres.forEach(n=>{const k=n.toLowerCase();copa.pts[k]=copa.pts[k]||{nombre:n,p:0};copa.pts[k].nombre=n;});
+    store("negro_copa",copa);
+  }
+  S=nuevoEstado(nombres,cfg.formato,cfg.maxC,cfg.copaOn);S.repartidor=repInicial;
+  logVar(`Arranca la partida: ${nombres.join(", ")}. Reparte ${nombres[S.repartidor]}.`+(cfg.copaOn?` Se juega por ${cfg.copaNombre}.`:""));
+  sOk();vibrar(20);pedirWake();guardar();render();
+}
+function continuarPartida(){S=store("negro_partida");pedirWake();sOk();toast("Seguimos donde quedó");render();}
+
+/* ================= header ================= */
+function headerHTML(enJuego){
+  let chip="";
+  if(enJuego){
+    const ri=rondaInfo();
+    const lbl=ri.tipo==="ciega"?"🂠 ciegas":ri.tipo==="frente"?"👁 frente":`<b>${ri.cartas}</b> cartas`;
+    chip=`<div class="ronda-chip">R <b>${S.ronda}</b>/${S.rondas} · ${lbl}</div>`;
+  }
+  return `<header>
+    <div class="logo">
+      <h1>NEGR<span class="o">O</span></h1>
+      <div class="palos">
+        <svg viewBox="0 0 24 24" fill="#d98c2f"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5" fill="#0e1526"/></svg>
+        <svg viewBox="0 0 24 24" fill="#cd4452"><path d="M5 4h14v3a7 7 0 0 1-5 6.7V18h3v2H7v-2h3v-4.3A7 7 0 0 1 5 7z"/></svg>
+        <svg viewBox="0 0 24 24" fill="#6f8fc4"><path d="M12 2l3 9-2 7h3v2H8v-2h3l-2-7z"/></svg>
+        <svg viewBox="0 0 24 24" fill="#5fae6e"><path d="M11 3h2l1.6 8.4L19 13v2l-5.5.6L14 21h-4l.5-5.4L5 15v-2l4.4-1.6z"/></svg>
+      </div>
+    </div>
+    <div class="h-right">${chip}<button class="icon-btn" onclick="abrirMenu()">☰</button></div>
+  </header>`;
+}
+
+/* ================= pronóstico (copa) ================= */
+function vistaPronostico(){
+  const orden=ordenDesde(S.repartidor),j=orden[S.pronTurno];
+  $("app").innerHTML=`
+  ${headerHTML(true)}
+  ${tipoBanner(rondaInfo().tipo)}
+  <div class="card turno-card fade-in">
+    <div class="eyebrow">🏆 Pronóstico de la ronda</div>
+    <div class="turno-nombre">${esc(S.jugadores[j])}</div>
+    <div class="turno-rol">¿Quién gana esta ronda? · acertás = +1 de copa</div>
+    <div class="pad-nombres">
+      ${S.jugadores.map((n,i)=>`<button onclick="pronosticar(${j},${i})">${esc(n)}${i===j?" (yo)":""}</button>`).join("")}
+    </div>
+  </div>
+  <div class="decl-lista">
+    ${orden.map((idx,k)=>`
+      <div class="decl-item ${k===S.pronTurno?"activo":""}">
+        <span>${esc(S.jugadores[idx])}</span>
+        ${S.pron[idx]!==null?`<span class="v">→ ${esc(S.jugadores[S.pron[idx]])}</span>`
+          :`<span class="pend">${k===S.pronTurno?"eligiendo…":"espera"}</span>`}
+      </div>`).join("")}
+  </div>
+  <div class="sep"></div>
+  ${S.pronTurno>0?`<button class="btn fantasma" onclick="deshacerPron()">↩ Corregir el anterior</button>`:""}`;
+}
+function pronosticar(j,pick){
+  S.pron[j]=pick;sClick();vibrar(12);
+  logVar(`R${S.ronda} · pronóstico: ${S.jugadores[j]} dice que gana ${S.jugadores[pick]}.`);
+  if(S.pronTurno<NJ-1)S.pronTurno++;
+  else S.fase="declarar";
+  guardar();render();
+}
+function deshacerPron(){
+  S.pronTurno--;const j=ordenDesde(S.repartidor)[S.pronTurno];S.pron[j]=null;
+  vibrar(8);guardar();render();
+}
+
+/* ================= declarar ================= */
+function vistaDeclarar(){
+  const cartas=cartasAhora(),orden=ordenDesde(S.repartidor),j=orden[S.declTurno];
+  const decladas=S.decl.filter(d=>d!==null).reduce((a,b)=>a+b,0);
+  const esUltimo=S.declTurno===NJ-1;
+  const aviso=esUltimo
+    ?`<div class="aviso">Pedidas hasta ahora: <b>${decladas}</b> de <b>${cartas}</b>. Con <b>${Math.max(cartas-decladas,0)}</b> la ronda cierra justa.</div>`:"";
+  const nums=Array.from({length:cartas+1},(_,n)=>n);
+  $("app").innerHTML=`
+  ${headerHTML(true)}
+  ${tipoBanner(rondaInfo().tipo)}
+  <div class="card turno-card fade-in">
+    <div class="eyebrow">Declara</div>
+    <div class="turno-nombre">${esc(S.jugadores[j])}</div>
+    <div class="turno-rol">${j===manoDe(S.repartidor)?"★ Mano — abre la ronda":j===S.repartidor?"Reparte — cierra la ronda":"Turno "+(S.declTurno+1)+" de 4"}</div>
+    <div class="pad ${cartas===1?"dos":""}">
+      ${nums.map(n=>`<button onclick="declarar(${j},${n})">${n}</button>`).join("")}
+    </div>
+    <div class="decl-resumen"><span>Cartas: <b>${cartas}</b></span><span>Pedidas: <b>${decladas}</b></span></div>
+    ${aviso}
+  </div>
+  <div class="decl-lista">
+    ${orden.map((idx,k)=>`
+      <div class="decl-item ${k===S.declTurno?"activo":""}">
+        <span>${esc(S.jugadores[idx])}${idx===S.repartidor?" 🂠":""}${idx===manoDe(S.repartidor)?" ★":""}</span>
+        ${S.decl[idx]!==null?`<span class="v">pide ${S.decl[idx]}</span>`:`<span class="pend">${k===S.declTurno?"declarando…":"espera"}</span>`}
+      </div>`).join("")}
+  </div>
+  <div class="sep"></div>
+  ${S.declTurno>0?`<button class="btn fantasma" onclick="deshacerDecl()">↩ Corregir la anterior</button>`:""}`;
+}
+function declarar(j,n){
+  S.decl[j]=n;sClick();vibrar(12);
+  logVar(`R${S.ronda}: ${S.jugadores[j]} pide ${n}.`);
+  if(S.declTurno<NJ-1){S.declTurno++;}
+  else{S.fase="jugar";logVar(`R${S.ronda}: arranca el juego (${cartasAhora()} carta${cartasAhora()===1?"":"s"}).`);sOk();}
+  guardar();render();
+}
+function deshacerDecl(){
+  S.declTurno--;const j=ordenDesde(S.repartidor)[S.declTurno];
+  logVar(`R${S.ronda}: se corrige la declaración de ${S.jugadores[j]}.`);
+  S.decl[j]=null;vibrar(8);guardar();render();
+}
+
+/* ================= jugar ================= */
+function vistaJugar(){
+  const cartas=cartasAhora(),fin=S.manos>=cartas;
+  $("app").innerHTML=`
+  ${headerHTML(true)}
+  ${tipoBanner(rondaInfo().tipo)}
+  <div class="mesa-info fade-in">
+    <div class="mano-prog">Mano ${Math.min(S.manos+1,cartas)} <small>de ${cartas}</small></div>
+    <div class="turno-rol" style="font-size:12px">TOCÁ AL QUE GANÓ</div>
+  </div>
+  <div class="barra"><i style="width:${(S.manos/cartas)*100}%"></i></div>
+  <div class="mesa">
+    ${S.jugadores.map((n,i)=>{
+      const cls=S.gan[i]>S.decl[i]?"pasado":S.gan[i]===S.decl[i]?"completo":"";
+      const estado=S.gan[i]>S.decl[i]?"se pasó "+(S.gan[i]-S.decl[i]):S.gan[i]===S.decl[i]?"justo ✓":"le falta"+(S.decl[i]-S.gan[i]===1?"":"n")+" "+(S.decl[i]-S.gan[i]);
+      return `<div class="jcard ${cls}" onclick="sumarMano(${i})">
+        <div class="nom">${esc(n)}</div>
+        <div class="pts">${S.puntos[i]>0?"+":""}${S.puntos[i]}</div>
+        <div class="marcas"><span class="gan">${S.gan[i]}</span><span class="de">/ pidió ${S.decl[i]}</span></div>
+        <div class="estado">${estado}</div>
+        ${i===S.repartidor?`<span class="chip-rep">REPARTE</span>`:i===manoDe(S.repartidor)?`<span class="chip-mano">MANO ★</span>`:""}
+      </div>`;}).join("")}
+  </div>
+  <div class="mesa-acciones">
+    <button class="btn fantasma mini" onclick="deshacerMano()" ${S.manos===0?"disabled":""}>↩ Deshacer</button>
+    <button class="btn mini" onclick="cerrarRonda()" ${fin?"":"disabled"}>Cerrar ronda</button>
+  </div>`;
+}
+function sumarMano(i){
+  const cartas=cartasAhora();
+  if(S.manos>=cartas){toast("Ya se jugaron todas las manos");sMal();return;}
+  S.gan[i]++;S.manos++;S.pila.push(i);
+  sClick();vibrar(15);
+  logVar(`R${S.ronda} · mano ${S.manos}: la gana ${S.jugadores[i]}.`);
+  if(S.manos===cartas)sOk();
+  guardar();render();
+}
+function deshacerMano(){
+  if(!S.pila.length)return;
+  const i=S.pila.pop();S.gan[i]--;S.manos--;
+  logVar(`R${S.ronda}: se deshace la última mano (${S.jugadores[i]}).`);
+  vibrar(8);guardar();render();
+}
+
+function cerrarRonda(){
+  const cartas=cartasAhora();
+  if(S.manos<cartas)return;
+  const deltas=S.decl.map((d,i)=>{
+    const g=S.gan[i];
+    if(d===g)return d===0?1:d;
+    return -Math.abs(d-g);
+  });
+  const posAntes=ranking();
+  deltas.forEach((d,i)=>S.puntos[i]+=d);
+  const posDesp=ranking();
+  // pronósticos de copa: gana la ronda el de mayor delta (empates cuentan todos)
+  let aciertos=null,ganadoresR=[];
+  if(S.copa){
+    const max=Math.max(...deltas);
+    ganadoresR=deltas.map((d,i)=>d===max?i:-1).filter(i=>i>=0);
+    aciertos=S.pron.map((p,i)=>{
+      const ok=ganadoresR.includes(p);
+      if(ok){S.copaPron[i]++;logVar(`R${S.ronda} · 🏆 ${S.jugadores[i]} acertó el pronóstico (+1 de copa).`);}
+      return ok;
+    });
+  }
+  S.historial.push({ronda:S.ronda,cartas:cartas,tipo:rondaInfo().tipo,rep:S.repartidor,
+    decl:[...S.decl],gan:[...S.gan],deltas:deltas,puntos:[...S.puntos],
+    pron:S.copa?[...S.pron]:null,aciertos:aciertos,ganadoresR:ganadoresR});
+  logVar(`R${S.ronda} cerrada: ${S.jugadores.map((n,i)=>`${n} ${deltas[i]>0?"+":""}${deltas[i]}`).join(" · ")}.`);
+  S.movs=S.jugadores.map((_,i)=>{
+    const a=posAntes.indexOf(i),b=posDesp.indexOf(i);
+    return a>b?"up":a<b?"dn":"";
+  });
+  S.fase="ronda";sOk();vibrar([30,40,30]);guardar();render();
+}
+function ranking(){return S.puntos.map((p,i)=>i).sort((a,b)=>S.puntos[b]-S.puntos[a]);}
+
+/* ================= resultado de ronda ================= */
+function vistaRonda(){
+  const h=S.historial[S.historial.length-1];
+  const orden=ranking();
+  const ultima=S.ronda>=S.rondas;
+  const prox=ultima?null:S.estructura[S.ronda];
+  const proxLbl=prox?(prox.tipo==="ciega"?"a ciegas 🂠":prox.tipo==="frente"?"en la frente 👁":prox.cartas+" cartas"):"";
+  $("app").innerHTML=`
+  ${headerHTML(true)}
+  <div class="eyebrow fade-in">Ronda ${h.ronda} · resultados</div>
+  <div class="card fade-in">
+    ${h.decl.map((_,i)=>i).sort((a,b)=>h.deltas[b]-h.deltas[a]).map(i=>`
+      <div class="res-fila">
+        <div class="res-nom">${esc(S.jugadores[i])}</div>
+        <div class="res-detalle">pidió ${h.decl[i]} · ganó ${h.gan[i]}</div>
+        <div class="res-delta ${h.deltas[i]>0?"pos":"neg"}">${h.deltas[i]>0?"+":""}${h.deltas[i]}</div>
+      </div>`).join("")}
+  </div>
+  ${S.copa&&h.pron?`
+  <div class="sep"></div>
+  <div class="eyebrow">🏆 Pronósticos</div>
+  <div class="card">
+    ${S.jugadores.map((n,i)=>`
+      <div class="pron-fila">
+        <span>${esc(n)} → ${esc(S.jugadores[h.pron[i]])}</span>
+        <span class="a ${h.aciertos[i]?"ok":"no"}">${h.aciertos[i]?"+1 COPA ✓":"erró"}</span>
+      </div>`).join("")}
+  </div>`:""}
+  <div class="sep-l"></div>
+  <div class="eyebrow">Tabla general</div>
+  <div class="card">
+    ${orden.map((i,k)=>`
+      <div class="res-fila">
+        <div class="res-pos">${k+1}°</div>
+        <span class="mov ${S.movs&&S.movs[i]||""}">${S.movs&&S.movs[i]==="up"?"▲":S.movs&&S.movs[i]==="dn"?"▼":""}</span>
+        <div class="res-nom">${esc(S.jugadores[i])}</div>
+        <div class="res-total">${S.puntos[i]>0?"+":""}${S.puntos[i]}</div>
+      </div>`).join("")}
+  </div>
+  <div class="sep-l"></div>
+  <button class="btn" onclick="${ultima?"terminar()":"siguienteRonda()"}">${ultima?"Ver resultado final":"Siguiente ronda · "+proxLbl}</button>`;
+}
+function siguienteRonda(){
+  S.ronda++;S.repartidor=(S.repartidor+1)%NJ;
+  S.decl=[null,null,null,null];S.declTurno=0;S.gan=[0,0,0,0];S.manos=0;S.pila=[];
+  S.pron=[null,null,null,null];S.pronTurno=0;
+  S.fase=S.copa?"pronostico":"declarar";
+  const ri=rondaInfo();
+  logVar(`Ronda ${S.ronda}: reparte ${S.jugadores[S.repartidor]} (${ri.tipo==="normal"?ri.cartas+" cartas":ri.tipo==="ciega"?"a ciegas":"en la frente"}).`);
+  sClick();vibrar(15);guardar();render();
+}
+
+/* ================= final ================= */
+function terminar(){
+  S.fase="final";
+  const orden=ranking();
+  logVar(`FIN: gana ${S.jugadores[orden[0]]} con ${S.puntos[orden[0]]>0?"+":""}${S.puntos[orden[0]]} puntos.`);
+  // copa: 3 al ganador (empates: todos), 1 al siguiente grupo, + pronósticos
+  if(S.copa){
+    const copa=store("negro_copa");
+    if(copa){
+      const top=S.puntos[orden[0]];
+      const primeros=orden.filter(i=>S.puntos[i]===top);
+      const resto=orden.filter(i=>S.puntos[i]!==top);
+      const seg=resto.length?S.puntos[resto[0]]:null;
+      const segundos=seg===null?[]:resto.filter(i=>S.puntos[i]===seg);
+      S.copaGanancia=S.jugadores.map((_,i)=>{
+        let g=S.copaPron[i];
+        if(primeros.includes(i))g+=3;else if(segundos.includes(i))g+=1;
+        return g;
+      });
+      S.jugadores.forEach((n,i)=>{
+        const k=n.toLowerCase();
+        copa.pts[k]=copa.pts[k]||{nombre:n,p:0};
+        copa.pts[k].p+=S.copaGanancia[i];
+      });
+      copa.partidas.push({fecha:new Date().toLocaleDateString("es-AR"),
+        posiciones:orden.map(i=>S.jugadores[i]),puntos:orden.map(i=>S.puntos[i])});
+      store("negro_copa",copa);
+      logVar(`🏆 ${cfgCopaNombre()}: ${S.jugadores.map((n,i)=>`${n} +${S.copaGanancia[i]}`).join(" · ")}.`);
+    }
+  }
+  // stats persistentes
+  const st=store("negro_stats")||{};
+  S.jugadores.forEach((n,i)=>{
+    const k=n.trim().toLowerCase();if(!k)return;
+    st[k]=st[k]||{nombre:n,jugadas:0,ganadas:0,mejor:-999};
+    st[k].nombre=n;st[k].jugadas++;
+    if(i===orden[0])st[k].ganadas++;
+    if(S.puntos[i]>st[k].mejor)st[k].mejor=S.puntos[i];
+  });
+  store("negro_stats",st);
+  storeDel("negro_partida");
+  sWin();vibrar([40,60,40,60,80]);render();
+  lanzarConfetti();
+}
+function cfgCopaNombre(){const c=store("negro_copa");return c?c.nombre:"la copa";}
+function vistaFinal(){
+  const orden=ranking();
+  const p=i=>S.puntos[i]>0?"+"+S.puntos[i]:String(S.puntos[i]);
+  const copa=S.copa?store("negro_copa"):null;
+  $("app").innerHTML=`
+  ${headerHTML(false)}
+  <div class="setup-hero fade-in" style="padding-bottom:0">
+    <div class="eyebrow">Fin de la partida</div>
+    <div class="titulo">Ganó<br>${esc(S.jugadores[orden[0]])}</div>
+  </div>
+  <div class="podio fade-in">
+    <div class="pcol p2"><div class="pn">${esc(S.jugadores[orden[1]])}</div><div class="pp">${p(orden[1])} pts</div><div class="bloque">2</div></div>
+    <div class="pcol p1"><div class="corona">👑</div><div class="pn">${esc(S.jugadores[orden[0]])}</div><div class="pp">${p(orden[0])} pts</div><div class="bloque">1</div></div>
+    <div class="pcol p3"><div class="pn">${esc(S.jugadores[orden[2]])}</div><div class="pp">${p(orden[2])} pts</div><div class="bloque">3</div></div>
+  </div>
+  <div class="card">
+    <div class="res-fila">
+      <div class="res-pos">4°</div>
+      <div class="res-nom">${esc(S.jugadores[orden[3]])}</div>
+      <div class="res-detalle">paga la próxima 😄</div>
+      <div class="res-total">${p(orden[3])}</div>
+    </div>
+  </div>
+  ${S.copa&&S.copaGanancia?`
+  <div class="sep"></div>
+  <div class="eyebrow">🏆 ${esc(cfgCopaNombre())} · esta fecha</div>
+  <div class="card">
+    ${S.jugadores.map((_,i)=>i).sort((a,b)=>S.copaGanancia[b]-S.copaGanancia[a]).map(i=>`
+      <div class="pron-fila">
+        <span>${esc(S.jugadores[i])} <span style="color:var(--marfil-dim);font-size:12px">(${S.copaPron[i]} pronóstico${S.copaPron[i]===1?"":"s"})</span></span>
+        <span class="a ${S.copaGanancia[i]>0?"ok":"no"}">+${S.copaGanancia[i]}</span>
+      </div>`).join("")}
+    ${copa?`<div class="copa-preview">Tabla de la copa: ${Object.values(copa.pts).sort((a,b)=>b.p-a.p)
+      .map((e,k)=>`${k+1}° <b>${esc(e.nombre)}</b> ${e.p}`).join(" · ")}</div>`:""}
+  </div>
+  <div class="sep"></div>
+  <button class="btn fantasma mini" onclick="abrirCopa()">Ver la copa completa</button>`:""}
+  <div class="sep-l"></div>
+  <button class="btn" onclick="revancha()">⚡ Revancha${S.copa?" · sigue la copa":""}</button>
+  <div class="sep"></div>
+  <div class="fila">
+    <button class="btn fantasma mini" onclick="compartir()">Compartir</button>
+    <button class="btn fantasma mini" onclick="abrirHist()">Rondas</button>
+  </div>
+  <div class="sep"></div>
+  <button class="btn fantasma mini" onclick="nuevaPartida()">Nueva partida</button>`;
+}
+function revancha(){
+  const nombres=S.jugadores,rep=(S.repartidor+1)%NJ;
+  const copaOn=S.copa;
+  S=nuevoEstado(nombres,cfg.formato,cfg.maxC,copaOn);S.repartidor=rep;
+  logVar(`Revancha: reparte ${nombres[rep]}.`);
+  sOk();vibrar(20);pedirWake();guardar();render();
+}
+function nuevaPartida(){S=null;render();}
+
+/* ================= compartir ================= */
+async function compartir(){
+  try{
+    const orden=ranking();
+    const copa=S.copa?store("negro_copa"):null;
+    const cv=document.createElement("canvas");cv.width=720;cv.height=copa?1000:900;
+    const x=cv.getContext("2d");
+    x.fillStyle="#0e1526";x.fillRect(0,0,cv.width,cv.height);
+    x.strokeStyle="rgba(236,225,198,.05)";x.lineWidth=1;
+    for(let i=-cv.height;i<cv.width;i+=22){x.beginPath();x.moveTo(i,0);x.lineTo(i+cv.height,cv.height);x.stroke();
+      x.beginPath();x.moveTo(i+cv.height,0);x.lineTo(i,cv.height);x.stroke();}
+    x.fillStyle="#ece1c6";x.font="800 84px 'Avenir Next Condensed','Arial Narrow',sans-serif";
+    x.fillText("NEGR",60,130);
+    x.fillStyle="#f2a93b";x.fillText("O",x.measureText("NEGR").width+60,130);
+    x.fillStyle="rgba(236,225,198,.55)";x.font="700 26px 'Avenir Next Condensed',sans-serif";
+    x.fillText(S.rondas+" RONDAS · "+new Date().toLocaleDateString("es-AR"),62,175);
+    orden.forEach((i,k)=>{
+      const y=270+k*125;
+      x.fillStyle=k===0?"rgba(217,140,47,.16)":"rgba(255,255,255,.04)";
+      roundRect(x,50,y-60,620,96,16);x.fill();
+      x.fillStyle=k===0?"#f2a93b":"#ece1c6";
+      x.font="800 40px 'Avenir Next Condensed','Arial Narrow',sans-serif";
+      x.fillText((k+1)+"°  "+S.jugadores[i].toUpperCase().slice(0,14),80,y);
+      x.textAlign="right";
+      x.fillText((S.puntos[i]>0?"+":"")+S.puntos[i],640,y);
+      x.textAlign="left";
+      if(k===0){x.font="34px serif";x.fillText("👑",600,y-22);}
+    });
+    if(copa){
+      const lista=Object.values(copa.pts).sort((a,b)=>b.p-a.p);
+      x.fillStyle="#f2a93b";x.font="800 30px 'Avenir Next Condensed',sans-serif";
+      x.fillText("🏆 "+copa.nombre.toUpperCase().slice(0,24),60,800);
+      x.fillStyle="rgba(236,225,198,.8)";x.font="600 26px ui-monospace,Menlo,monospace";
+      x.fillText(lista.map((e,k)=>(k+1)+"° "+e.nombre+" "+e.p).join("  ·  ").slice(0,52),60,845);
+    }
+    x.fillStyle="rgba(236,225,198,.4)";x.font="600 22px -apple-system,sans-serif";
+    x.fillText("Anotado con NEGRO",60,cv.height-45);
+    const blob=await new Promise(r=>cv.toBlob(r,"image/png"));
+    const file=new File([blob],"negro-resultado.png",{type:"image/png"});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      await navigator.share({files:[file],title:"Resultado NEGRO"});
+    }else{
+      const a=document.createElement("a");a.href=URL.createObjectURL(blob);
+      a.download="negro-resultado.png";a.click();toast("Imagen descargada");
+    }
+  }catch(e){if(e&&e.name!=="AbortError")toast("No se pudo compartir");}
+}
+function roundRect(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);
+  x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();}
+
+/* ================= hojas ================= */
+function abrirHoja(id){cerrarHojas();$("hojaFondo").classList.add("abierta");$(id).classList.add("abierta");}
+function cerrarHojas(){$("hojaFondo").classList.remove("abierta");
+  ["hojaVar","hojaMenu","hojaHist","hojaStats","hojaCopa"].forEach(i=>$(i).classList.remove("abierta"));}
+function abrirVar(){
+  $("varBody").innerHTML=(S&&S.varLog.length)?S.varLog.map(v=>`<div class="var-item"><span class="t">${v.t}</span><span>${esc(v.txt)}</span></div>`).join("")
+    :`<p class="sub" style="padding:10px 0 24px">Todavía no pasó nada. Acá queda registrada cada mano, para zanjar discusiones.</p>`;
+  abrirHoja("hojaVar");
+}
+function abrirHist(){
+  $("histBody").innerHTML=(S&&S.historial.length)?S.historial.slice().reverse().map(h=>`
+    <div class="h-ronda">
+      <h4>Ronda ${h.ronda} · ${h.tipo==="ciega"?"a ciegas":h.tipo==="frente"?"en la frente":h.cartas+" cartas"} · repartió ${esc(S.jugadores[h.rep])}</h4>
+      <div class="h-grid">
+        <span class="hh">Jugador</span><span class="hh">Pidió</span><span class="hh">Ganó</span><span class="hh">Δ</span>
+        ${S.jugadores.map((n,i)=>`<span>${esc(n)}</span><span>${h.decl[i]}</span><span>${h.gan[i]}</span>
+          <span class="${h.deltas[i]>0?"dpos":"dneg"}">${h.deltas[i]>0?"+":""}${h.deltas[i]}</span>`).join("")}
+      </div>
+    </div>`).join("")
+    :`<p class="sub" style="padding:10px 0 24px">Todavía no se cerró ninguna ronda.</p>`;
+  abrirHoja("hojaHist");
+}
+function abrirStats(){
+  const st=store("negro_stats")||{};
+  const lista=Object.values(st).sort((a,b)=>b.ganadas-a.ganadas||b.jugadas-a.jugadas);
+  $("statsBody").innerHTML=lista.length?lista.map(s=>`
+    <div class="stat-fila"><b>${esc(s.nombre)}</b>
+      <span>${s.ganadas} ganada${s.ganadas===1?"":"s"} / ${s.jugadas} · mejor: ${s.mejor>0?"+":""}${s.mejor}</span></div>`).join("")
+    +`<div class="sep-l"></div><button class="btn fantasma mini" onclick="borrarStats()">Borrar historial</button>`
+    :`<p class="sub" style="padding:10px 0 24px">Cuando terminen la primera partida, acá queda quién viene ganando.</p>`;
+  abrirHoja("hojaStats");
+}
+function borrarStats(){if(confirm("¿Borrar el historial de partidas ganadas?")){storeDel("negro_stats");abrirStats();toast("Historial borrado");}}
+function abrirCopa(){
+  const copa=store("negro_copa");
+  $("copaTitulo").textContent=copa?("🏆 "+copa.nombre):"La Copa";
+  $("copaBody").innerHTML=copa?`
+    ${Object.values(copa.pts).sort((a,b)=>b.p-a.p).map((e,k)=>`
+      <div class="stat-fila"><b>${k+1}° ${esc(e.nombre)}${k===0?" 👑":""}</b><span class="copa-pts">${e.p}</span></div>`).join("")}
+    <div class="sep"></div>
+    <p class="sub" style="font-size:12px">Gana la partida +3 · segundo +1 · pronóstico acertado +1 · ${copa.partidas.length} fecha${copa.partidas.length===1?"":"s"} jugada${copa.partidas.length===1?"":"s"} desde el ${copa.creada}.</p>
+    ${copa.partidas.length?`
+    <div class="sep"></div>
+    ${copa.partidas.slice().reverse().map((pa,k)=>`
+      <div class="h-ronda">
+        <h4>Fecha ${copa.partidas.length-k} · ${pa.fecha}</h4>
+        <div class="h-grid" style="grid-template-columns:auto 1fr auto">
+          ${pa.posiciones.map((n,j)=>`<span>${j+1}°</span><span>${esc(n)}</span><span class="${pa.puntos[j]>0?"dpos":"dneg"}">${pa.puntos[j]>0?"+":""}${pa.puntos[j]}</span>`).join("")}
+        </div>
+      </div>`).join("")}`:""}
+    <div class="sep"></div>
+    <button class="btn fantasma mini" onclick="borrarCopa()">Terminar / borrar la copa</button>`
+    :`<p class="sub" style="padding:10px 0 24px">No hay ninguna copa en juego. Activala desde la pantalla inicial.</p>`;
+  abrirHoja("hojaCopa");
+}
+function borrarCopa(){if(confirm("¿Borrar la copa y toda su tabla? No se puede deshacer.")){
+  storeDel("negro_copa");cerrarHojas();toast("Copa borrada");if(!S||S.fase==="final")render();}}
+function abrirMenu(){
+  const enJuego=S&&S.fase!=="final";
+  $("menuBody").innerHTML=`
+    ${enJuego?`<button class="menu-item" onclick="cerrarHojas();abrirVar()"><span class="mi">📋</span> VAR · qué pasó en cada mano</button>
+    <button class="menu-item" onclick="cerrarHojas();abrirHist()"><span class="mi">🗂</span> Rondas jugadas</button>`:""}
+    ${store("negro_copa")?`<button class="menu-item" onclick="cerrarHojas();abrirCopa()"><span class="mi">🏆</span> La Copa</button>`:""}
+    <button class="menu-item" onclick="cerrarHojas();abrirStats()"><span class="mi">📈</span> Historial entre amigos</button>
+    <button class="menu-item" onclick="toggleSonido()"><span class="mi">${sonidoOn?"🔊":"🔇"}</span> Sonido: ${sonidoOn?"activado":"apagado"}</button>
+    ${enJuego?`<button class="menu-item peligro" onclick="abandonar()"><span class="mi">✕</span> Abandonar partida</button>`:""}`;
+  abrirHoja("hojaMenu");
+}
+function toggleSonido(){sonidoOn=!sonidoOn;store("negro_sonido",sonidoOn);sClick();abrirMenu();}
+function abandonar(){if(confirm("¿Abandonar la partida? Se pierde el progreso (la copa no se toca).")){
+  S=null;storeDel("negro_partida");cerrarHojas();render();}}
+
+/* ================= confetti ================= */
+function lanzarConfetti(){
+  const cv=$("confetti"),x=cv.getContext("2d");
+  cv.width=innerWidth;cv.height=innerHeight;
+  const cols=["#f2a93b","#d98c2f","#cd4452","#6f8fc4","#ece1c6"];
+  const ps=Array.from({length:140},()=>({x:Math.random()*cv.width,y:-20-Math.random()*cv.height*.5,
+    s:4+Math.random()*6,v:2+Math.random()*3.5,a:Math.random()*Math.PI,va:(Math.random()-.5)*.2,
+    c:cols[Math.floor(Math.random()*cols.length)]}));
+  let t=0;
+  (function paso(){
+    x.clearRect(0,0,cv.width,cv.height);t++;
+    ps.forEach(p=>{p.y+=p.v;p.x+=Math.sin(p.a)*1.2;p.a+=p.va;
+      x.save();x.translate(p.x,p.y);x.rotate(p.a);x.fillStyle=p.c;
+      x.fillRect(-p.s/2,-p.s/2,p.s,p.s*.6);x.restore();});
+    if(t<260)requestAnimationFrame(paso);else x.clearRect(0,0,cv.width,cv.height);
+  })();
+}
+
+/* ================= render ================= */
+function render(){
+  if(!S){vistaSetup(store("negro_partida"));return;}
+  if(S.fase==="pronostico")vistaPronostico();
+  else if(S.fase==="declarar")vistaDeclarar();
+  else if(S.fase==="jugar")vistaJugar();
+  else if(S.fase==="ronda")vistaRonda();
+  else if(S.fase==="final")vistaFinal();
+  else vistaSetup(null);
+}
+render();
+</script>
+</body>
+</html>
